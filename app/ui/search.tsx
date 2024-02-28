@@ -13,6 +13,7 @@ export default function Search({ placeholder }: { placeholder: string }) {
   const defaultValue = urlSearchParams.get('search') || '';
 
   const handleChange = (e: Record<string, any>) => {
+    urlSearchParams.set('page', '1'); // 搜索内容变化之后将页码重置为 1
     const search = e.target.value;
     if (search) urlSearchParams.set('search', search);
     else urlSearchParams.delete('search');
