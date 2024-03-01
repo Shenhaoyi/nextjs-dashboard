@@ -13,6 +13,7 @@ const FormSchema = z.object({
   date: z.string(),
 });
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
+const UpdateInvoice = CreateInvoice;
 
 // 会给这个函数起一个接口
 export async function createInvoice(formData: FormData) {
@@ -31,4 +32,23 @@ export async function createInvoice(formData: FormData) {
   // 本次数据库操作，导致页面数据需要更新
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices'); // 给客户端重定向
+}
+
+export async function updateInvoice(id: string, formData: FormData) {
+  const { customerId, amount, status } = UpdateInvoice.parse({
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+    status: formData.get('status'),
+  });
+
+  const amountInCents = amount * 100;
+
+  await sql`
+    UPDATE invoices
+    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    WHERE id = ${id}
+  `;
+
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
 }
