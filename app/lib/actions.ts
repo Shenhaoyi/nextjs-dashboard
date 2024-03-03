@@ -7,20 +7,51 @@ import { redirect } from 'next/navigation';
 // 校验
 const FormSchema = z.object({
   id: z.string(),
-  customerId: z.string(),
-  amount: z.coerce.number(),
-  status: z.enum(['pending', 'paid']),
+  customerId: z.string({
+    invalid_type_error: 'Please select a customer.', // 自定义错误提示信息
+  }),
+  // 强制转为 number, 如input type为 number 时
+  amount: z.coerce
+    .number()
+    .gt(0, { message: 'Please enter an amount greater than $0.' }), // 强制转数字之后，空字符串为 0
+  // 枚举类型
+  status: z.enum(['pending', 'paid'], {
+    invalid_type_error: 'Please select an invoice status.',
+  }),
   date: z.string(),
 });
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
+// 丢掉 2 个属性
+const CreateInvoice = FormSchema.omit({
+  id: true,
+  date: true,
+});
 const UpdateInvoice = CreateInvoice;
 
+export type State = {
+  errors?: {
+    customerId?: string[];
+    amount?: string[];
+    status?: string[];
+  };
+  message?: string | null;
+};
+
 // 会给这个函数起一个接口
-export async function createInvoice(formData: FormData) {
-  // TODO:校验错误处理
-  const { customerId, amount, status } = CreateInvoice.parse(
+export async function createInvoice(previousState: State, formData: FormData) {
+  // 校验，通过则返回值，失败则报错
+  const validatedFields = CreateInvoice.safeParse(
     Object.fromEntries(formData.entries()),
   );
+
+  // If form validation fails, return errors early. Otherwise, continue.
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Invoice.',
+    };
+  }
+  const { customerId, amount, status } = validatedFields.data;
+
   const amountInCents = amount * 100; // 提高计算精度
   const date = new Date().toISOString().split('T')[0];
 
