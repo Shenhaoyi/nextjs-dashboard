@@ -14,7 +14,7 @@ import { useFormState } from 'react-dom';
 import FormError from './form-error';
 
 // 表单校验错误提示容器 id
-enum CUSTOM_ERROR_ID {
+export enum CUSTOM_ERROR_ID {
   SELECT = 'customer-error-select',
   INPUT = 'customer-error-input',
   CHECKBOX = 'customer-error-checkbox',
